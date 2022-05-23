@@ -10,7 +10,10 @@ what i want= x_train, y_train, x_test, y_test
 """
 
 
+#from re import X
+from math import floor
 from re import X
+from tkinter import N
 import numpy as np
 import pandas as pd
 import matplotlib as plt
@@ -22,12 +25,7 @@ from os import path
 from sklearn.model_selection import train_test_split
 np.set_printoptions(suppress=True)
 
-# batch size of 10
-# patch size of 51
-# 1057/50 = 21.14
-# 706/50 = 14.12
-patch_size = 52
-batch_size = 10
+
 start = datetime.datetime(2015,1,1)
 end = datetime.datetime(2022,1,1)
 stock = "^GSPC"
@@ -53,48 +51,76 @@ def sho_table(x):
     print(tabulate(mydata, headers=headers))
 
 # labels for real data = 1 one hot encoded
-def transform_data():
+def transform_data(normal = False):
     data_df = stock_dl(start,end,stock)
     data_df.loc[:,'label'] = 1
     data_df.drop(labels='Date', axis=1, inplace=True)
     X_train, X_test, y_train, y_test = train_test_split(data_df.iloc[:,:-1],data_df.iloc[:,-1],
-    test_size=.4, train_size=.6, random_state=12, shuffle=False, stratify=None)
+    train_size=.6, random_state=12, shuffle=False, stratify=None)
     print(f'shape of X_train / test: {X_train.shape}{X_test.shape}')
     print(f'shape of y_train / test: {y_train.shape} {y_test.shape}')
-    print('Reshaping')   
+#    print('Reshaping')   
 
-    X_train = X_train.to_numpy()
-    X_train = X_train[:, :, np.newaxis]
-    X_train = np.transpose(X_train, (1, 2, 0))
+#    X_train = X_train.to_numpy()
+#    X_train = X_train[:, :, np.newaxis]
+#    X_train = np.transpose(X_train, (1, 2, 0))
+#    print(f'shape of X_train / test: {X_train.shape}{X_test.shape}')
+#    print(f'shape of y_train / test: {y_train.shape} {y_test.shape}')
+    X_train=X_train.to_numpy()
+    X_test=X_test.to_numpy() 
+    y_train=y_train.to_numpy() 
+    y_test=y_test.to_numpy()
+
+    X_train = X_train.reshape(7, X_train.shape[1], -1)
+    X_train = X_train.reshape(X_train.shape[0], X_train.shape[1], 1, X_train.shape[2])
+    X_train = X_train[:,:,:,:-1]
+
+    X_test = X_test.reshape(2, X_test.shape[1], -1)
+    X_test = X_test.reshape(X_test.shape[0], X_test.shape[1], 1, X_test.shape[2])
+    X_test = X_test[:,:,:,:-1]
     print(f'shape of X_train / test: {X_train.shape}{X_test.shape}')
     print(f'shape of y_train / test: {y_train.shape} {y_test.shape}')
 
+    def _normalize(epoch):
+        """ A helper method for the normalization method.
+            Returns
+                result: a normalized epoch
+        """
+        e = 1e-10
+        result = (epoch - epoch.mean(axis=0)) / ((np.sqrt(epoch.var(axis=0)))+e)
+        return result
+    
+    def _min_max_normalize(epoch):
+        
+        result = (epoch - min(epoch)) / (max(epoch) - min(epoch))
+        return result
+
+    def normalization(epochs):
+        """ Normalizes each epoch e s.t mean(e) = 0 and var(e) = 1
+            Args:
+                epochs - Numpy structure of epochs
+            Returns:
+                epochs_n - mne data structure of normalized epochs (mean=0, var=1)
+        """
+        for i in range(epochs.shape[0]):
+            for j in range(epochs.shape[1]):
+                epochs[i,j,0,:] = _normalize(epochs[i,j,0,:])
+#                 epochs[i,j,0,:] = self._min_max_normalize(epochs[i,j,0,:])
+
+        return epochs
+
+    if normal :
+        print('Normalising X test and train')
+        X_train = normalization(X_train)
+        X_test = normalization(X_test)
     return X_train, X_test, y_train, y_test
 
 
-x_train, x_test, y_train, y_test = transform_data()
-
-x_train=x_train.to_numpy()
-x_train = x_train[:, :, np.newaxis]
-x_train = np.transpose(x_train, (1, 2, 0))
-
-x_train = x_train[:,:,:,:-1]
-z = np.array_split(x_train, 21)
-z[1].shape
-z
-
-x_train = x_train.reshape(x_train.shape[0], x_train.shape[1], 1, x_train.shape[2])
-x_train = x_train[:,:,:,:-1]
-
-print(z)
-# (10, 6, 1, 1763)
-def patches_batches(x):
-    x = np.array(x)
-    x = x[:, :, np.newaxis]
-    x = x.reshape(batch_size, x.shape[1], 1, 1763)
-
-    return x
-
-print(patches_batches(x_test).shape)
+x_train, x_test, y_train, y_test = transform_data(normal=True)
 
 
+
+
+
+x_train.shape
+(np.transpose(x_train , (0, 2, 1,3))).shape
