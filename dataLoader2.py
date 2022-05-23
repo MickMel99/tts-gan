@@ -5,7 +5,6 @@ x_train, y_train, x_test, y_test = spx_load_dataset()
 
 data range: 1st Jan 2015 -> 1st Jan 2022
 
-what i want= x_train, y_train, x_test, y_test
 
 """
 
@@ -51,7 +50,7 @@ def sho_table(x):
     print(tabulate(mydata, headers=headers))
 
 # labels for real data = 1 one hot encoded
-def transform_data(normal = False):
+def load_data(normal = False, data_mode=''):
     data_df = stock_dl(start,end,stock)
     data_df.loc[:,'label'] = 1
     data_df.drop(labels='Date', axis=1, inplace=True)
@@ -113,14 +112,17 @@ def transform_data(normal = False):
         print('Normalising X test and train')
         X_train = normalization(X_train)
         X_test = normalization(X_test)
-    return X_train, X_test, y_train, y_test
+    #return X_train, X_test, y_train, y_test
+
+    if data_mode == 'Train':
+        return X_train, y_train
+    elif data_mode == 'Test':
+        return X_test, y_test
+    else:
+        print('Peease enter whether you want train or test')
 
 
-x_train, x_test, y_train, y_test = transform_data(normal=True)
+#x_train, y_train = load_data(normal=True, data_mode='Train')
 
+#x_test, y_test = load_data(normal=True, data_mode='Test')
 
-
-
-
-x_train.shape
-(np.transpose(x_train , (0, 2, 1,3))).shape
