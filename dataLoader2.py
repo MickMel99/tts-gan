@@ -125,4 +125,3 @@ def load_data(normal = False, data_mode=''):
 #x_train, y_train = load_data(normal=True, data_mode='Train')
 
 #x_test, y_test = load_data(normal=True, data_mode='Test')
-
