@@ -119,7 +119,7 @@ def load_data(normal = False, data_mode=''):
     elif data_mode == 'Test':
         return X_test, y_test
     else:
-        print('Peease enter whether you want train or test')
+        print('Please enter whether you want train or test')
 
 
 #x_train, y_train = load_data(normal=True, data_mode='Train')
